@@ -14,11 +14,7 @@ namespace ReceiveMessage
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-
-                //channel.QueueDeclare(queue: "messageQueue", durable: true, exclusive: false, autoDelete: false, arguments: null);
-
-                channel.ExchangeDeclare(exchange: "direct_message",
-                                    type: "direct");
+                channel.ExchangeDeclare(exchange: "direct_message", type: "direct");
 
                 var queueName = channel.QueueDeclare(queue: "messageQueue", durable: true, exclusive: false, autoDelete: false, arguments: null).QueueName;
 
@@ -31,7 +27,7 @@ namespace ReceiveMessage
                 Console.WriteLine(" Esperando por mensagens.");
                 var hasMessage = channel.MessageCount(queueName) == 0;
 
-                if (hasMessage) Console.WriteLine($" A {queueName} não possui mensagens.");
+                if (hasMessage) Console.WriteLine($"A {queueName} não possui mensagens.");
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += (model, ea) =>
@@ -43,24 +39,21 @@ namespace ReceiveMessage
                         var message = Encoding.UTF8.GetString(body);
                         var routingKey = ea.RoutingKey;
 
+
                         Console.WriteLine($"Recebido: {message}");
 
-                        Console.WriteLine("Pronto");
-
-                        // here channel could also be accessed as ((EventingBasicConsumer)sender).Model
                         channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     }
                     catch
                     {
-                        //log ex
                         channel.BasicNack(ea.DeliveryTag, false, false);
                     }
                 };
 
                 channel.BasicConsume(queue: "messageQueue", autoAck: false, consumer: consumer);
 
-
                 Console.WriteLine(" Pressione [enter] para sair.");
+                Console.WriteLine("");
                 Console.ReadLine();
             }
         }
